@@ -74,16 +74,18 @@ impl Segment {
                 }
                 RecordRead::Corrupt => {
                     let pos = reader.stream_position()?;
-                    if pos < file_len {
-                        // There is more data after the bad record, so this is not a
-                        // simple torn tail - treat it as real corruption.
+                    if pos < file_len && rest_parses_cleanly(&mut reader)? {
+                        // There is more data after the bad record, and it decodes as a
+                        // clean run of valid records - this isn't a torn tail, it's
+                        // real corruption sitting behind otherwise-good data.
                         return Err(Error::Corruption(format!(
                             "crc mismatch in {} at offset {good_offset}",
                             path.display()
                         )));
                     }
-                    // A CRC failure on the last record with nothing after it is most
-                    // likely a torn write that happened to fill the length field.
+                    // A CRC failure with nothing salvageable after it (either nothing
+                    // follows, or what follows doesn't parse either) is most likely a
+                    // torn write that happened to fill the length field.
                     warn!(
                         segment = %path.display(),
                         offset = good_offset,
@@ -156,6 +158,20 @@ impl Segment {
     pub fn remove(self) -> Result<()> {
         std::fs::remove_file(&self.path)?;
         Ok(())
+    }
+}
+
+// Check whether everything from the reader's current position parses as a clean run
+// of valid records reaching a natural EOF. Used to tell genuine interior corruption
+// (good data follows the bad record) apart from a torn tail (the bad record was
+// itself part of the same torn write, and what follows is more unparseable garbage).
+fn rest_parses_cleanly(reader: &mut BufReader<File>) -> Result<bool> {
+    loop {
+        match record::read_record(reader)? {
+            RecordRead::Entry(_) => continue,
+            RecordRead::Eof => return Ok(true),
+            RecordRead::Truncated | RecordRead::Corrupt => return Ok(false),
+        }
     }
 }
 
