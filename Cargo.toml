@@ -1,0 +1,48 @@
+[package]
+name = "wal-kv"
+version = "0.1.0"
+edition = "2021"
+
+# The library holds the logic; the binary is a thin wrapper.
+[lib]
+name = "wal_kv"
+path = "src/lib.rs"
+
+[[bin]]
+name = "wal-kv"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime + gRPC transport.
+tokio = { version = "1.38", features = ["full"] }
+tonic = "0.12"
+prost = "0.13"
+async-trait = "0.1"
+
+# Serialization: bincode for on-disk/log framing, serde for derive, toml for config.
+serde = { version = "1", features = ["derive"] }
+bincode = "1.3"
+toml = "0.8"
+
+# Integrity, randomness, ergonomics.
+crc32fast = "1.4"
+rand = "0.8"
+thiserror = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive"] }
+
+[build-dependencies]
+tonic-build = "0.12"
+
+[dev-dependencies]
+tempfile = "3"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "throughput"
+harness = false
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
