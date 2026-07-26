@@ -1,0 +1,7 @@
+/target
+**/*.rs.bk
+Cargo.lock
+# Local data directories created by running a node.
+/data
+*.snap
+*.log
