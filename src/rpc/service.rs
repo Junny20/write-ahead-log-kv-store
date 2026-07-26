@@ -125,6 +125,9 @@ impl pb::kv_server::Kv for KvService {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Internal Raft service
+// ---------------------------------------------------------------------------
 
 /// Implements the internal `Raft` gRPC service by delegating to the shared core.
 #[derive(Clone)]
@@ -190,6 +193,10 @@ impl pb::raft_server::Raft for RaftService {
         }))
     }
 }
+
+// ---------------------------------------------------------------------------
+// Outbound transport
+// ---------------------------------------------------------------------------
 
 // A gRPC-backed Transport: a pool of RaftClients keyed by peer id, connected on first
 // use and cached (the tonic client is cheap to clone and multiplexes over one HTTP/2
@@ -286,6 +293,10 @@ impl Transport for PeerTransport {
         })
     }
 }
+
+// ---------------------------------------------------------------------------
+// Conversions & helpers
+// ---------------------------------------------------------------------------
 
 // Encode a LogEntry for the wire (command is bincode-serialised).
 fn entry_to_pb(e: &LogEntry) -> Result<pb::LogEntry> {

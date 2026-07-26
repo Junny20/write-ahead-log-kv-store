@@ -1,7 +1,7 @@
 # wal-kv
 
 A small key/value store built on a write-ahead log and Raft replication. A hobby
-project for learning how these pieces fit together.
+project for learning how these pieces fit together, written to be read.
 
 Path of a write:
 
@@ -11,9 +11,10 @@ client --gRPC--> rpc --> raft (propose) --> wal (fsync) --> store (apply)
                           +-- replicate to peers --gRPC--> raft
 ```
 
-The storage engine (WAL, memtable, snapshots) is unit-tested. The Raft
+The storage engine (WAL, memtable, snapshots) is real and unit-tested. The Raft
 layer implements the receiver side in full (RequestVote / AppendEntries, log
-matching, commit rule, leader lease) plus a driver that ties it together.
+matching, commit rule, leader lease) plus a driver that ties it together. A few
+sender-side details are marked TODO. Don't point it at data you care about.
 
 ## Layout
 
