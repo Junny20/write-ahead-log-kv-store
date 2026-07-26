@@ -87,9 +87,12 @@ impl Log {
         Ok(self.last_index)
     }
 
-    /// Flush and `fsync` the active segment, making all prior appends durable.
+    /// Flush and `fsync` every segment, making all prior appends durable.
     pub fn sync(&mut self) -> Result<()> {
-        self.segments.last_mut().unwrap().sync()
+        for seg in &mut self.segments {
+            seg.sync()?;
+        }
+        Ok(())
     }
 
     /// Read every surviving record in order, paired with its index. Used at startup to
